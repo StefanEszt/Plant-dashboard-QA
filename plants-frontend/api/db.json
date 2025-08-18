@@ -1,0 +1,14 @@
+{
+  "assets": [
+    { "id": "pp-001", "name": "District Heat CHP – Budapest", "lat": 47.4979, "lng": 19.0402, "status": "OK" },
+    { "id": "pp-002", "name": "Peaking Gas Engine – Graz", "lat": 47.0707, "lng": 15.4395, "status": "OK" },
+    { "id": "pp-003", "name": "Solar Farm – Szeged", "lat": 46.253, "lng": 20.1414, "status": "OK" }
+  ],
+  "alarms": [
+    { "asset": "pp-001", "type": "NOX_HIGH", "severity": "MEDIUM", "message": "NOx above 180 ppm", "ts": "2025-08-16T07:20:24Z" }
+  ],
+  "telemetry": [
+    { "asset": "pp-001", "ts": "2025-08-16T07:25:00Z", "co2": 182, "moisture": 54, "health": 92 },
+    { "asset": "pp-002", "ts": "2025-08-16T07:25:00Z", "co2": 130, "moisture": 60, "health": 89 }
+  ]
+}
