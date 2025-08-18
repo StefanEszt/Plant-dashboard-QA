@@ -1,0 +1,105 @@
+[
+  {
+    "id": "tab1",
+    "type": "tab",
+    "label": "Sim"
+  },
+  {
+    "id": "inject1",
+    "type": "inject",
+    "z": "tab1",
+    "name": "tick 2s",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "2",
+    "once": true,
+    "onceDelay": 0.5,
+    "wires": [
+      [
+        "func1"
+      ]
+    ]
+  },
+  {
+    "id": "func1",
+    "type": "function",
+    "z": "tab1",
+    "name": "make telemetry",
+"func": "var plants = [\n  { id:'pp-001', type:'CHP',    peBase:2.8, peJitter:0.25, effBase:44, effJ:1.5, noxBase:120, noxJ:20 },\n  { id:'pp-002', type:'CHP',    peBase:1.6, peJitter:0.20, effBase:41, effJ:2.0, noxBase:190, noxJ:25 },\n  { id:'pp-003', type:'Peaker', peBase:0.3, peJitter:0.30, effBase:35, effJ:2.5, noxBase:160, noxJ:30 }\n];\n\nvar now = new Date().toISOString();\nvar out = [];\n\nfor (let p of plants){\n  // Electrical power (MW)\n  let pe  = p.peBase + (Math.random()*2-1)*p.peJitter;\n  if (p.id==='pp-003') pe = Math.max(0, pe); // peaker near zero at idle\n\n  // Efficiency (%)\n  let eff = p.effBase + (Math.random()*2-1)*p.effJ;\n\n  // NOx (ppm)\n  let nox = p.noxBase + (Math.random()*2-1)*p.noxJ;\n\n  out.push({\n    asset_id: p.id,\n    ts: now,\n    moisture: pe,   // reinterpretation: P_e MW\n    health:   eff,  // efficiency %\n    co2:      nox   // NOx ppm\n  });\n}\n\nmsg.payload = out;\nreturn [[msg]];",
+    "wires": [
+      [
+        "split1"
+      ]
+    ]
+  },
+  {
+    "id": "split1",
+    "type": "split",
+    "z": "tab1",
+    "name": "",
+    "splt": "\\n",
+    "spltType": "str",
+    "arraySplt": 1,
+    "stream": false,
+    "addname": "",
+    "wires": [
+      [
+        "http1"
+      ]
+    ]
+  },
+  {
+    "id": "http1",
+    "type": "http request",
+    "z": "tab1",
+    "name": "POST /ingest",
+    "method": "POST",
+    "ret": "txt",
+    "paytoqs": false,
+    "url": "http://api:8000/ingest",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "httpin1",
+    "type": "http in",
+    "z": "tab1",
+    "name": "POST /applyCommand",
+    "url": "/applyCommand",
+    "method": "post",
+    "swaggerDoc": "",
+    "wires": [
+      [
+        "cmdfunc"
+      ]
+    ]
+  },
+  {
+    "id": "cmdfunc",
+    "type": "function",
+    "z": "tab1",
+    "name": "Validate + ACK",
+    "func": "var body = msg.req.body || {};\nvar allowed = ['setpoint','start','stop'];\nvar ok = allowed.includes(body.cmd);\nmsg.payload = { status: ok ? 'ACK' : 'REJECT' };\nreturn msg;",
+    "wires": [
+      [
+        "httpout1"
+      ]
+    ]
+  },
+  {
+    "id": "httpout1",
+    "type": "http response",
+    "z": "tab1",
+    "name": "",
+    "statusCode": "200",
+    "headers": {},
+    "wires": []
+  }
+]
